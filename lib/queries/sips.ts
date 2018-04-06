@@ -21,7 +21,7 @@ const query =
 'inner join CON_TipoPrestacion as tp on tp.idTipoPrestacion = consulta.idTipoPrestacion '+
 'inner join CIE10 as cie on consultaD.CODCIE10 = cie.ID ' +
 'inner join Sys_Profesional as prof on consulta.idProfesional = prof.idProfesional '+
-'inner join sys_efector as efector on efector.idEfector = 221 '  // HELLER
+'inner join sys_efector as efector on efector.idEfector = 221 '
 // 'where tp.nombre <> \x27 Ninguna \x27 ';
 
 
