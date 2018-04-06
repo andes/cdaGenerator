@@ -1,0 +1,40 @@
+{
+  "name": "cda-generator",
+  "version": "1.0.0",
+  "description": "Robot para generar CDA",
+  "main": "index.js",
+  "directories": {
+    "lib": "lib",
+    "test": "test"
+  },
+  "scripts": {
+    "startNode": "tsc && gulp && concurrently \"npm run node\" ",
+    "start": "npm run && concurrently -r \"npm run tsc:w\" \"npm run node\" ",
+    "node": "nodemon -q ./index.js",
+    "tsc": "tsc",
+    "tsc:w": "tsc -w",
+    "lint": "tslint --project ."
+  },
+  "keywords": [
+    "hl7"
+  ],
+  "author": "Hugo H. Fernández",
+  "license": "ISC",
+  "dependencies": {
+    "fs": "0.0.1-security",
+    "http": "0.0.0",
+    "moment": "^2.22.0",
+    "mssql": "^4.1.0",
+    "path": "^0.12.7",
+    "tsc": "^1.20150623.0",
+    "url_parser": "^1.0.5"
+  },
+  "devDependencies": {
+    "@types/es6-promise": "^3.3.0",
+    "@types/node": "^9.6.0",
+    "concurrently": "^3.5.1",
+    "nodemon": "^1.17.2",
+    "parse": "^1.11.1",
+    "typescript": "^2.7.2"
+  }
+}
