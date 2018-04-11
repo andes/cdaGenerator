@@ -14,7 +14,7 @@ function vPaciente(registro) {
         // TODO
         // Chequear que la fecha de nacimiento no sea raro como 1900, etc
         // Ver si es necesario realizar alguna transformación de sexo
-        paciente.sexo = (paciente.sexo === 'Masculino') ? 'masculino' : 'femenino';
+        paciente.sexo = (paciente.sexo === 'Femenino') ? 'femenino' : 'masculino';
         return paciente
     } else {
         return null
