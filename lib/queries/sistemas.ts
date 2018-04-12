@@ -72,7 +72,6 @@ export function insertData(cdaInfo, pool): any {
         let insertQuery = ConfigPrivate.createInsertQuery(cdaInfo);
         let result = await pool.request().query(insertQuery);
         if (result) {
-            console.log('Se inserta registro: ', result);
             resolve(result);
         }
     })
