@@ -1,7 +1,7 @@
 import * as ConfigPrivate from './../config.private';
 let sql = require('mssql');
 
-function getTargetQuery(target) {
+export function getTargetQuery(target) {
     let query;
     let connectionString;
     let data;
@@ -30,7 +30,7 @@ function getTargetQuery(target) {
                     database: sipsInstance.database
                 },
                 query =
-                'select top(2) consulta.idConsulta as id, tp.nombre as prestacion,efector.idEfector as idEfector, consulta.fecha as fecha,' +
+                'select top(100) consulta.idConsulta as id, tp.nombre as prestacion,efector.idEfector as idEfector, consulta.fecha as fecha,' +
                 'pac.numeroDocumento as pacienteDocumento, pac.nombre as pacienteNombre, pac.apellido as pacienteApellido, ' +
                 'pac.fechaNacimiento as pacienteFechaNacimiento, sex.nombre as pacienteSexo,' +
                 'prof.numeroDocumento as profesionalDocumento, prof.nombre as profesionalNombre, prof.apellido as profesionalApellido, prof.matricula as profesionalMatricula,' +
@@ -56,34 +56,24 @@ function getTargetQuery(target) {
 
 
 // Consulta generica
-export function getData(target): any {
-    return new Promise((resolve, reject) => {
-        let data = getTargetQuery(target);
-        sql.connect(data.connectionString, async function (err) {
-            if (err) {
-                reject(null);
-            }
-            let result = await new sql.Request().query(data.query);
-            if (result) {
-                resolve(result);
-            }
-        })
+export function getData(query, pool): any {
+    return new Promise(async (resolve, reject) => {
+        console.log('antes del palo');
+        let result = await pool.request().query(query);
+        if (result) {
+            resolve(result);
+        }
     });
 }
 
 // Inserta la información
-export function insertData(target, cdaInfo): any {
-    return new Promise((resolve, reject) => {
-    const transaction = new sql.Transaction();
-    const request = new sql.Request();
-    let insertQuery = ConfigPrivate.createInsertQuery(cdaInfo);
-    console.log('la query a ejecutar es: ', insertQuery);
-    request.query(insertQuery, (err, result) => {
-        if (err) {
-            console.log('Error en el insert!');
-            reject(err);
+export function insertData(cdaInfo, pool): any {
+    return new Promise(async (resolve, reject) => {
+        let insertQuery = ConfigPrivate.createInsertQuery(cdaInfo);
+        let result = await pool.request().query(insertQuery);
+        if (result) {
+            console.log('Se inserta registro: ', result);
+            resolve(result);
         }
-        resolve(result);
     })
-    });
 }

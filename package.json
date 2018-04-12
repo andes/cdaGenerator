@@ -21,10 +21,12 @@
   "author": "Hugo H. Fernández",
   "license": "ISC",
   "dependencies": {
+    "@types/mssql": "^4.0.7",
     "fs": "0.0.1-security",
     "http": "0.0.0",
     "moment": "^2.22.0",
     "mssql": "^4.1.0",
+    "node-schedule": "^1.3.0",
     "path": "^0.12.7",
     "tsc": "^1.20150623.0",
     "url_parser": "^1.0.5"
