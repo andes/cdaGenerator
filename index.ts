@@ -29,17 +29,15 @@ export async function ejecutar(target) {
                 return new Promise(async (resolve: any, reject: any) => {
                     let cdaBuilder = new CdaBuilder();
                     let res = await cdaBuilder.build(dto);
+                    console.log('cda generado respuesta: ', res);
                     // Guardamos en una tabla cdaMigration: id, idPrestacion, cda, fecha
                     res = JSON.parse(res);
                     if (res.cda) {
                         let insert = await sistemas.insertData(res, pool);
-                        resolve();
-                    } else {
-                        resolve();
                     }
+                    resolve();
                 })
             }
-
             counter = counter + 1;
             if (counter >= resultado.recordset.length) {
                 sql.close();

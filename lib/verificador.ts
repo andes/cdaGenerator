@@ -36,9 +36,12 @@ function vProfesional(registro) {
 }
 
 function vPrestacion(prestacionNombre) {
-// Verifica que la prestación no sea vacía y matchea el nombre de la prestación con un código SNOMED de la colección de mapeo
-    let prestacion;
-    return prestacion = '700152009';
+// TODO Verificar que sea un código snomed o sino que lo busque en la colección de configuracionPrestaciones
+    let prestacion = null;
+    if (prestacionNombre) {
+      prestacion = prestacionNombre;          
+    }
+    return prestacion;
 }
 
 function vCie10() {

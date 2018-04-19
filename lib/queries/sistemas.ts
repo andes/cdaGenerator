@@ -16,7 +16,48 @@ export function getTargetQuery(target) {
                     server: ConfigPrivate.staticConfiguration.heller.ip,
                     database: ConfigPrivate.staticConfiguration.heller.database
                 }
-                query = 'TO DO chicos HELLER';
+                query =  `select top 10
+                rtrim(CNS_TipoConsultorio.Descripcion) + '-' + rtrim(CNS_Recepcion.Id_recepcion) as id,
+                  451000013109 AS prestacion,
+                     221 as idEfector,  
+                 CNS_Recepcion.Fecha as fecha,
+              
+                   CNS_Recepcion.DNI AS pacienteDocumento, 
+                      Pacientes.NOMBRES AS pacienteNombre,
+                 Pacientes.APELLIDOS AS pacienteApellido,
+              
+                 Pacientes.[Fecha de Nacimiento] AS pacienteFechaNacimiento,
+                 Pacientes.Sexo AS pacienteSexo,
+                       Profesionales.DNI as profesionalDocumento,
+                         CASE  
+                     WHEN CHARINDEX(' ', Profesionales.[Apellido y nombre]) >=1 THEN SUBSTRING(Profesionales.[Apellido y nombre],CHARINDEX(' ', Profesionales.[Apellido y nombre])+1,30 )
+                     ELSE NULL
+                     END as profesionalNombre,
+                   CASE 
+                     WHEN CHARINDEX(' ', Profesionales.[Apellido y nombre]) >=1 THEN LEFT(Profesionales.[Apellido y nombre],CHARINDEX(' ', Profesionales.[Apellido y nombre])-1 )
+                     ELSE Profesionales.[Apellido y nombre]
+                     END  as profesionalApellido, 
+              
+              
+                  Profesionales.MP as profesionalMatricula,
+                 CIE.cod_sss as cie10,
+                   CONVERT(text, CNS_Informes.Informe) AS texto
+                   FROM CNS_Recepcion 
+                 inner join  Pacientes on CNS_Recepcion.DNI = Pacientes.[Número de Documento]
+                 inner JOIN CNS_Consultorios ON CNS_Recepcion.Id_Consultorio= CNS_Consultorios.Id_Consultorio
+                   INNER JOIN CNS_TipoConsultorio ON CNS_Consultorios.Id_TipoCNS = CNS_TipoConsultorio.Id_TipoCNS
+                   inner JOIN Profesionales ON CNS_Recepcion.CodigoProf = Profesionales.Código
+                   inner JOIN  CNS_Informes on CNS_Recepcion.Id_Informe= CNS_Informes.Id_Informe		
+                 inner JOIN CNS_Informes_MDC ON CNS_Recepcion.Id_Informe = CNS_Informes_MDC.Id_Informe 
+                   inner JOIN CIE ON CNS_Informes_MDC.CodigoCIE10 = CIE.Id 
+                 where Pacientes.[Número de Documento]!=99 and
+                      (Pacientes.[Número de Documento]<88000000 or Pacientes.[Número de Documento]>89000000)
+                      and Atendido =1
+                      and CodigoProf not in (1019159,1019158,1019157,1019054)/*se excluye cns enfermeria*/
+                      and CNS_Recepcion.Id_Consultorio not in (76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,98,99) -- no odontologias
+                      and CNS_Informes_MDC.Ppal=1 
+                      and CNS_Informes_MDC.CodigoCIE10 <>''
+              ORDER BY CNS_Recepcion.Fecha `;
                 break;
             }
         default:
@@ -44,7 +85,8 @@ export function getTargetQuery(target) {
                 'inner join Sys_Profesional as prof on consulta.idProfesional = prof.idProfesional ' +
                 'left join andesCDA as cda on consulta.idConsulta = cda.idPrestacion ' +
                 'inner join sys_efector as efector on efector.idEfector = ' + target +
-                ' where cda.idPrestacion is null'
+                ' where cda.idPrestacion is null';
+                break;
             }
     }
     return data = {
@@ -58,7 +100,6 @@ export function getTargetQuery(target) {
 // Consulta generica
 export function getData(query, pool): any {
     return new Promise(async (resolve, reject) => {
-        console.log('antes del palo');
         let result = await pool.request().query(query);
         if (result) {
             resolve(result);
