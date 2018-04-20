@@ -14,7 +14,10 @@ export function getTargetQuery(target) {
                     user: ConfigPrivate.staticConfiguration.heller.user,
                     password: ConfigPrivate.staticConfiguration.heller.password,
                     server: ConfigPrivate.staticConfiguration.heller.ip,
-                    database: ConfigPrivate.staticConfiguration.heller.database
+                    database: ConfigPrivate.staticConfiguration.heller.database,
+                    options: {
+                        tdsVersion: '7_1'
+                    }
                 }
                 query =  `select top 10
                 rtrim(CNS_TipoConsultorio.Descripcion) + '-' + rtrim(CNS_Recepcion.Id_recepcion) as id,
@@ -60,7 +63,7 @@ export function getTargetQuery(target) {
               ORDER BY CNS_Recepcion.Fecha `;
                 break;
             }
-        default:
+        default: // SIPS NIVEL CENTRAL
             {
                 // Buscamos que instancia de SIPS vamos a traer
                 let sipsInstance: any = ConfigPrivate.getSipsInstance(target);
