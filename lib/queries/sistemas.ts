@@ -7,6 +7,57 @@ export function getTargetQuery(target) {
     let data;
 
     switch (target) {
+        case 'hpn':
+            {
+                // Conexión a la base de datos
+                connectionString = {
+                    user: ConfigPrivate.staticConfiguration.hpn.user,
+                    password: ConfigPrivate.staticConfiguration.hpn.password,
+                    server: ConfigPrivate.staticConfiguration.hpn.ip,
+                    database: ConfigPrivate.staticConfiguration.hpn.database
+                },
+                query = `select top(10) 
+                -- Id
+                ('T-' + CONVERT(varchar(max), Turnos_Agendas_de_Consultorios.Codigo)) as id,
+                --
+                -- Turnos_Especialidades.SNOMED
+                ISNULL(Turnos_Especialidades.SNOMED, 391000013108) as prestacion,
+                -- ID Efector HPN/Heller
+                205 as idEfector, 
+                -- Fecha prestacion
+                Turnos_Agendas_de_Consultorios.Fecha as fecha,
+                -- Paciente
+                Historias_Clinicas.HC_Documento as pacienteDocumento, 
+                Historias_Clinicas.HC_Nombre as pacienteNombre, 
+                Historias_Clinicas.HC_Apellido as pacienteApellido,
+                Historias_Clinicas.HC_Nacimiento_Fecha as pacienteFechaNacimiento,
+                Historias_Clinicas.HC_Sexo as pacienteSexo,
+                -- Profesional
+                Personal_Agentes.Documento as profesionalDocumento, 
+                Personal_Agentes.Nombre as profesionalNombre, 
+                Personal_Agentes.Apellido as profesionalApellido, 
+                NULL as profesionalMatricula,
+                -- Código CIE sin texto. Ejemplo: J10.5
+                (CASE diagnostico1_CIE10_subcausa 
+                WHEN '(Sin subtipo)' THEN RTRIM(SUBSTRING(diagnostico1_CIE10_causa, 1, CHARINDEX(' ', diagnostico1_CIE10_causa))) 
+                WHEN '((Diagnóstico ilegible))' THEN NULL
+                WHEN '(Sin especificar)' THEN NULL
+                WHEN '((Normal))' THEN NULL
+                ELSE RTRIM(SUBSTRING(diagnostico1_CIE10_subcausa, 1, CHARINDEX(' ', diagnostico1_CIE10_subcausa)))
+                END) as cie10,
+                -- Texto (si existe)
+                'Especialidad: ' + Turnos_Especialidades.Nombre COLLATE SQL_Latin1_General_CP1_CI_AI + '<br><br>' + ('Diagnóstico: ' + ISNULL(diagnostico1, 'Sin diagnóstico')) as texto
+                -- Tablas
+                FROM Turnos_Agendas_de_Consultorios  
+                INNER JOIN Personal_Agentes ON Agente = Personal_Agentes.Numero  
+                INNER JOIN Turnos_AgendasPP ON app = Turnos_AgendasPP.codigo
+                INNER JOIN Turnos_Especialidades ON Turnos_AgendasPP.Especialidad = Turnos_Especialidades.codigo
+                LEFT JOIN Turnos_RegistrosConsultorio ON Turnos_Agendas_de_Consultorios.Codigo = Turnos_RegistrosConsultorio.Agenda
+                INNER JOIN Historias_Clinicas ON Paciente = HC_Numero AND HC_Tipo_de_documento <> 'SN'
+                WHERE Turnos_Agendas_de_Consultorios.Estado = 1
+                AND NOT EXISTS (SELECT * FROM AndesCDA WHERE idPrestacion = ('T-' + CONVERT(varchar(max), Turnos_Agendas_de_Consultorios.Codigo)))`;
+                break;
+            }
         case 'heller':
             {
                 // Conexión a la base de datos
@@ -19,10 +70,10 @@ export function getTargetQuery(target) {
                         tdsVersion: '7_1'
                     }
                 }
-                query =  `select top 10
-                rtrim(CNS_TipoConsultorio.Descripcion) + '-' + rtrim(CNS_Recepcion.Id_recepcion) as id,
-                  451000013109 AS prestacion,
-                     221 as idEfector,  
+                query = `select top 100
+                replace(CNS_TipoConsultorio.Descripcion,' ','') + '-' + rtrim(CNS_Recepcion.Id_recepcion) as id,
+                391000013108 AS prestacion,
+                     999 as idEfector,  
                  CNS_Recepcion.Fecha as fecha,
               
                    CNS_Recepcion.DNI AS pacienteDocumento, 
@@ -113,10 +164,16 @@ export function getData(query, pool): any {
 // Inserta la información
 export function insertData(cdaInfo, pool): any {
     return new Promise(async (resolve, reject) => {
+        console.log('antes de insertar...................');
         let insertQuery = ConfigPrivate.createInsertQuery(cdaInfo);
-        let result = await pool.request().query(insertQuery);
-        if (result) {
+        console.log('la query es: ', insertQuery);
+        await pool.request().query(insertQuery), (err, result) => {
+            if (err) {
+                console.log('insert error: ', err);
+                reject(result);
+            }
+            console.log('inserto de primavera!!');
             resolve(result);
-        }
+        };
     })
 }

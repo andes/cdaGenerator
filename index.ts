@@ -20,19 +20,22 @@ export async function ejecutar(target) {
             // Paso 2: Verificamos que los datos estén completos por cada registro y si es válido se genera el Data Transfer Object para generar 
             let dto = Verificator.verificar(r);
             if (dto) {
+                console.log('paso ok...genero el cda');
                 // Paso 3: Invocamos a la función que genera el CDA por cada documento
                 // por ahora no lo hago hasta probar todo
                 await generarCDA(dto);
+            } else {
+                console.log('error al verificar!!!', r);
             }
             
             function generarCDA(dto) {
                 return new Promise(async (resolve: any, reject: any) => {
                     let cdaBuilder = new CdaBuilder();
                     let res = await cdaBuilder.build(dto);
-                    console.log('cda generado respuesta: ', res);
                     // Guardamos en una tabla cdaMigration: id, idPrestacion, cda, fecha
                     res = JSON.parse(res);
                     if (res.cda) {
+                        console.log('antes de llamar');
                         let insert = await sistemas.insertData(res, pool);
                     }
                     resolve();
