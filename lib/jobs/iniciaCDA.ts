@@ -1,7 +1,8 @@
 import * as inicio from '../../index';
 
 function run() {
-    let target = 'heller'; 
+    console.log('Inicia el proceso...');
+    let target = 'hpn'; 
     inicio.ejecutar(target)
 }
 

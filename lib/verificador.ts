@@ -44,9 +44,16 @@ function vPrestacion(prestacionNombre) {
     return prestacion;
 }
 
-function vCie10() {
-
+function vCie10(cie10) {
+    // TODO verificar el código cie10 en configuraciónPrestaciones
+    let c = null;
+    if (cie10) {
+        return cie10;
+    } else {
+        return c
+    }
 }
+
 export function verificar(registro): any {
     let dto = {
         paciente: null,
@@ -58,25 +65,29 @@ export function verificar(registro): any {
         texto: null
     }
     let notError = true;
+    let msgError = '';
     let paciente;
     let pacienteVerified:any = vPaciente(registro);
     if (pacienteVerified) {
         dto['paciente'] = pacienteVerified;
     } else {
         notError = false;
+        msgError = 'El paciente no ha sido verificado correctamente';
     }
     let profesionalVerified = vProfesional(registro);
     if (profesionalVerified && notError) {
         dto['profesional'] = profesionalVerified;
     } else {
-        notError = false
+        notError = false;
+        msgError = 'El profesional no ha sido verificado correctamente';
     }
 
     let prestacionVerified = vPrestacion(registro.prestacion);
     if (prestacionVerified && notError) {
         dto['prestacionSnomed'] = prestacionVerified;
     } else {
-        notError = false
+        notError = false;
+        msgError = 'La prestación no existe';
     }
     notError = registro.fecha ? true : false;
     notError = registro.id ? true : false;
@@ -84,14 +95,27 @@ export function verificar(registro): any {
     if (notError) {
         dto['fecha'] = moment(registro.fecha).toDate();
         dto['id'] = registro.id;
+    } else {
+        msgError = 'El registro no posee fecha de registro o id';
     }
+
+    if (notError) {
+        let cie10Verified = vCie10(registro.cie10);
+        if (cie10Verified && notError) {
+            dto['cie10'] = registro.cie10; 
+        } else {
+            msgError = 'El código CIE10 no es válido';
+        }
+    }
+
     // NO Obligatorios
     if (notError) {
         dto['texto'] = registro.texto ? registro.texto : null;
-        dto['cie10'] = registro.cie10 ? registro.cie10 : null;   
     }
 
     if (notError) {
         return dto
+    } else {
+        dto['msgError'] = msgError;
     }
 }

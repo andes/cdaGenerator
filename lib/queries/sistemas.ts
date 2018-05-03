@@ -14,7 +14,8 @@ export function getTargetQuery(target) {
                     user: ConfigPrivate.staticConfiguration.hpn.user,
                     password: ConfigPrivate.staticConfiguration.hpn.password,
                     server: ConfigPrivate.staticConfiguration.hpn.ip,
-                    database: ConfigPrivate.staticConfiguration.hpn.database
+                    database: ConfigPrivate.staticConfiguration.hpn.database,
+                    requestTimeout: 20000
                 },
                 query = `select top(10) 
                 -- Id
@@ -154,19 +155,22 @@ export function getTargetQuery(target) {
 // Consulta generica
 export function getData(query, pool): any {
     return new Promise(async (resolve, reject) => {
-        let result = await pool.request().query(query);
-        if (result) {
-            resolve(result);
-        }
-    });
+        console.log('antes del await');
+        pool.request().query(query, function(err, recordSet) {
+            if (err) {
+                console.log('Error: ', err);
+                reject(err);
+            }
+            console.log('Obtuvo resultado ok');
+            resolve(recordSet);
+        });
+    })
 }
 
 // Inserta la información
 export function insertData(cdaInfo, pool): any {
     return new Promise(async (resolve, reject) => {
-        console.log('antes de insertar...................');
         let insertQuery = ConfigPrivate.createInsertQuery(cdaInfo);
-        console.log('la query es: ', insertQuery);
         await pool.request().query(insertQuery), (err, result) => {
             if (err) {
                 console.log('insert error: ', err);
