@@ -30,22 +30,28 @@ export async function ejecutar(target) {
                 
             } else {
                 console.log('Motivo de error desde la verificación: ', dto.msgError);
-                // TODO Debería insertarlo en una colección de rejected
+                // Inserta en la colección de cda Rejected debido a que no cumplió la verificación básica
+                let info = {
+                    idPrestacion: dto.id,
+                    msgError: 'No cumple varificación básica: ' + dto.msgError
+                };
+                sistemas.insertRejection(info, pool)   
             }
             
             function generarCDA(dto) {
                 return new Promise(async (resolve: any, reject: any) => {
                     let cdaBuilder = new CdaBuilder();
                     let res = await cdaBuilder.build(dto);
-                    // Guardamos en una tabla cdaMigration: id, idPrestacion, cda, fecha
                     res = JSON.parse(res);
                     if (res.cda) {
-                        console.log('Genere el cda de: ', res.idPrestacion);
-                        let insert = sistemas.insertData(res, pool);
+                        sistemas.insertData(res, pool);
                     } else {
-                        console.log('No se genero el cda de: ', dto.id);
-                        console.log('Motivo del error desde la API: ', res);
-                        // TODO Debería insertarlo en una colección de rejected
+                        // Se inserta en la colección de cdaRejected
+                        let info = {
+                            idPrestacion : dto.id,
+                            msgError : res.error. status + ': ' + res.error.error 
+                        };
+                        sistemas.insertRejection(info, pool);
                     }
 
                     console.log('finaliza de generar el cda e insertar en la bd y continua con el siguiente');

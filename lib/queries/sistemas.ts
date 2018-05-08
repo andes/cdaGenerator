@@ -56,7 +56,8 @@ export function getTargetQuery(target) {
                 LEFT JOIN Turnos_RegistrosConsultorio ON Turnos_Agendas_de_Consultorios.Codigo = Turnos_RegistrosConsultorio.Agenda
                 INNER JOIN Historias_Clinicas ON Paciente = HC_Numero AND HC_Tipo_de_documento <> 'SN'
                 WHERE Turnos_Agendas_de_Consultorios.Estado = 1
-                AND NOT EXISTS (SELECT * FROM AndesCDA WHERE idPrestacion = ('T-' + CONVERT(varchar(max), Turnos_Agendas_de_Consultorios.Codigo)))`;
+                AND NOT EXISTS (SELECT * FROM AndesCDA WHERE idPrestacion = ('T-' + CONVERT(varchar(max), Turnos_Agendas_de_Consultorios.Codigo))) 
+                AND NOT EXISTS (SELECT * FROM AndesCDARejected where idPrestacion = ('T-' + CONVERT(varchar(max), Turnos_Agendas_de_Consultorios.Codigo)))`;
                 break;
             }
         case 'heller':
@@ -174,10 +175,25 @@ export function insertData(cdaInfo, pool): any {
         await pool.request().query(insertQuery), (err, result) => {
             if (err) {
                 console.log('insert error: ', err);
-                reject(result);
+                reject(err);
             }
             console.log('inserto de primavera!!');
             resolve(result);
         };
     })
+}
+
+// Insert rejection
+export function insertRejection(info, pool):any {
+    return new Promise(async (resolve, reject) => {
+        let insertQuery = ConfigPrivate.createInsertRejectQuery(info);
+        await pool.request().query(insertQuery), (err, result) => {
+            if (err) {
+                console.log('insert reject error: ', err);
+                reject(err);
+            }
+            console.log('Inserto en la tabla de rejectados debido a un error en los datos');
+            resolve(result);
+        }
+    });
 }
