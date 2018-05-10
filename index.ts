@@ -15,9 +15,7 @@ export async function ejecutar(target) {
     let counter = 0;
     let data =  Sistemas.getTargetQuery(target);
     let pool = await sql.connect(data.connectionString);
-    console.log('antes del getData: ');
     let resultado = await sistemas.getData(data.query, pool);
-    console.log('despues del getData');
     console.log('cantidad de registros: ', resultado.recordset.length);
     if (resultado.recordset.length > 0) {
         resultado.recordset.forEach(async r => {
