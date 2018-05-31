@@ -74,7 +74,7 @@ export function getTargetQuery(target) {
                 }
                 query = `select top 100
                 replace(CNS_TipoConsultorio.Descripcion,' ','') + '-' + rtrim(CNS_Recepcion.Id_recepcion) as id,
-                391000013108 AS prestacion,
+                convert(varchar(max),391000013108) as prestacion,
                      999 as idEfector,  
                  CNS_Recepcion.Fecha as fecha,
               
@@ -116,9 +116,8 @@ export function getTargetQuery(target) {
               ORDER BY CNS_Recepcion.Fecha `;
                 break;
             }
-        default: // SIPS NIVEL CENTRAL
+        default: // SIPS NIVEL CENTRAL: Todos los C.S.
             {
-                // Buscamos que instancia de SIPS vamos a traer
                 let sipsInstance: any = ConfigPrivate.getSipsInstance(target);
                 connectionString = {
                     user: sipsInstance.user,
@@ -127,21 +126,25 @@ export function getTargetQuery(target) {
                     database: sipsInstance.database
                 },
                 query =
-                'select top(100) consulta.idConsulta as id, tp.nombre as prestacion,efector.idEfector as idEfector, consulta.fecha as fecha,' +
-                'pac.numeroDocumento as pacienteDocumento, pac.nombre as pacienteNombre, pac.apellido as pacienteApellido, ' +
-                'pac.fechaNacimiento as pacienteFechaNacimiento, sex.nombre as pacienteSexo,' +
-                'prof.numeroDocumento as profesionalDocumento, prof.nombre as profesionalNombre, prof.apellido as profesionalApellido, prof.matricula as profesionalMatricula,' +
-                'cie.CODIGO as cie10, consulta.informeConsulta as texto ' +
-                'from Sys_Paciente as pac ' +
-                'inner join sys_sexo as sex on sex.idSexo = pac.idSexo ' +
-                'inner join CON_Consulta as consulta on consulta.idPaciente = pac.idPaciente ' +
-                'inner join CON_ConsultaDiagnostico as consultaD on consultaD.idConsulta = consulta.idConsulta ' +
-                'inner join CON_TipoPrestacion as tp on tp.idTipoPrestacion = consulta.idTipoPrestacion ' +
-                'inner join Sys_CIE10 as cie on consultaD.CODCIE10 = cie.ID ' +
-                'inner join Sys_Profesional as prof on consulta.idProfesional = prof.idProfesional ' +
-                'left join andesCDA as cda on consulta.idConsulta = cda.idPrestacion ' +
-                'inner join sys_efector as efector on efector.idEfector = ' + target +
-                ' where cda.idPrestacion is null';
+                `select top(10) 
+                consulta.idConsulta as id, 
+                convert(varchar(max),391000013108) as prestacion,
+                efector.idEfector as idEfector, 
+                consulta.fecha as fecha,
+                pac.numeroDocumento as pacienteDocumento, pac.nombre as pacienteNombre, pac.apellido as pacienteApellido,
+                pac.fechaNacimiento as pacienteFechaNacimiento, sex.nombre as pacienteSexo,
+                prof.numeroDocumento as profesionalDocumento, prof.nombre as profesionalNombre, prof.apellido as profesionalApellido, prof.matricula as profesionalMatricula,
+                cie.CODIGO as cie10, consulta.informeConsulta as texto
+                from Sys_Paciente as pac
+                inner join sys_sexo as sex on sex.idSexo = pac.idSexo
+                inner join CON_Consulta as consulta on consulta.idPaciente = pac.idPaciente
+                inner join CON_ConsultaDiagnostico as consultaD on consultaD.idConsulta = consulta.idConsulta
+                inner join Sys_CIE10 as cie on consultaD.CODCIE10 = cie.ID
+                inner join Sys_Profesional as prof on consulta.idProfesional = prof.idProfesional
+                inner join Sys_Efector as efector on consulta.idEfector = efector.idEfector
+                left join andesCDA as cda on consulta.idConsulta = cda.idPrestacion
+                where NOT EXISTS (SELECT * FROM AndesCDA WHERE idPrestacion = id)
+                AND NOT EXISTS (SELECT * FROM AndesCDARejected where idPrestacion = id)`;
                 break;
             }
     }
@@ -156,7 +159,6 @@ export function getTargetQuery(target) {
 // Consulta generica
 export function getData(query, pool): any {
     return new Promise(async (resolve, reject) => {
-        console.log('antes del await');
         pool.request().query(query, function(err, recordSet) {
             if (err) {
                 console.log('Error: ', err);

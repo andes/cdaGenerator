@@ -58,7 +58,7 @@ export function verificar(registro): any {
     let dto = {
         paciente: null,
         profesional: null,
-        prestacion: null,
+        prestacionSnomed: null,
         fecha: null,
         id: null,
         cie10: null,
