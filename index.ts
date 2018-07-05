@@ -1,7 +1,6 @@
 import {
     CdaBuilder
 } from './lib/cda.service';
-import * as moment from 'moment';
 import * as sistemas from './lib/queries/sistemas';
 import * as Verificator from './lib/verificador';
 import * as Sistemas from './lib/queries/sistemas';
@@ -13,19 +12,17 @@ export async function ejecutar(target) {
     // let data: any;
     sql.close();
     let counter = 0;
-    let data =  Sistemas.getTargetQuery(target);
+    let data = Sistemas.getTargetQuery(target);
     let pool = await sql.connect(data.connectionString);
     let resultado = await sistemas.getData(data.query, pool);
-    console.log('cantidad de registros: ', resultado.recordset.length);
     if (resultado.recordset.length > 0) {
         resultado.recordset.forEach(async r => {
             // Paso 2: Verificamos que los datos estén completos por cada registro y si es válido se genera el Data Transfer Object para generar 
             let dto = Verificator.verificar(r);
             if (dto && !dto.msgError) {
                 // Paso 3: Invocamos a la función que genera el CDA por cada documento
-                // por ahora no lo hago hasta probar todo
                 await generarCDA(dto);
-                
+
             } else {
                 console.log('Motivo de error desde la verificación: ', dto.msgError);
                 // Inserta en la colección de cda Rejected debido a que no cumplió la verificación básica
@@ -33,34 +30,38 @@ export async function ejecutar(target) {
                     idPrestacion: dto.id,
                     msgError: 'No cumple varificación básica: ' + dto.msgError
                 };
-                sistemas.insertRejection(info, pool)   
+                sistemas.insertRejection(info, pool)
             }
-            
+
             function generarCDA(dto) {
                 return new Promise(async (resolve: any, reject: any) => {
-                    let cdaBuilder = new CdaBuilder();
-                    let res = await cdaBuilder.build(dto);
-                    res = JSON.parse(res);
-                    if (res.cda) {
-                        sistemas.insertData(res, pool);
-                    } else {
-                        // Se inserta en la colección de cdaRejected
-                        let info = {
-                            idPrestacion : dto.id,
-                            msgError : res.error. status + ': ' + res.error.error 
-                        };
-                        sistemas.insertRejection(info, pool);
-                    }
+                    try {
+                        let cdaBuilder = new CdaBuilder();
+                        let res = await cdaBuilder.build(dto);
+                        res = JSON.parse(res);
+                        if (res.cda) {
+                            await sistemas.insertData(res, pool);
+                        } else {
+                            // Se inserta en la colección de cdaRejected
+                            let info = {
+                                idPrestacion: dto.id,
+                                msgError: res.error.status + ': ' + res.error.error
+                            };
+                            await sistemas.insertRejection(info, pool);
+                        }
 
-                    console.log('finaliza de generar el cda e insertar en la bd y continua con el siguiente');
-                    resolve();
+                        console.log('finaliza de generar el cda e insertar en la bd y continua con el siguiente');
+                        resolve();
+                    } catch (ex) {
+                        reject(ex);
+                    }
                 })
             }
             counter = counter + 1;
             console.log('cantidad hasta el momento: ', counter);
             if (counter >= resultado.recordset.length) {
                 console.log('Proceso finalizado... y sigue escuchando');
-               // pool.close();
+                // pool.close();
             } else {
                 console.log('Continúa el procesamiento de información....');
             }
